@@ -9,6 +9,10 @@ def lees_inhoud(amount=1):
         seqcheck = seq.lower()
         if seqcheck[-5:] == "fasta":
             with open(seq, "r") as f:
+                lijn1 = f.readline()
+                if lijn1[0] != ">":
+                    print("Dit bestand is geen correct .FASTA bestand.\nHet eerste karakter is niet '>'")
+                    return False, False
                 seq = ''
                 header = ''
                 for line in f.readlines():
@@ -22,7 +26,7 @@ def lees_inhoud(amount=1):
                         seq = "{}{}".format(seq,line)
             seqlist.append(seq)
         else:
-            print("Dit bestand is geen FASTA bestand.")
+            print("Dit bestand is geen .FASTA bestand.")
             return False, False
     return headers, seqlist
 
