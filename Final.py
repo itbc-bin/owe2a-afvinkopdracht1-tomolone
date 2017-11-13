@@ -6,19 +6,24 @@ def lees_inhoud(amount=1):
     headers = []
     for x in range(0, amount):
         seq = askopenfilename()
-        with open(seq, "r") as f:
-            seq = ''
-            header = ''
-            for line in f.readlines():
-                if '>' in line[:1]:
-                    tempheader = line.replace('\n', '')
-                    headers.append(tempheader)
-                    if seq:
-                        seqlist.append(seq)
-                        seq = ''
-                else:
-                    seq = "{}{}".format(seq,line)
+        seqcheck = seq.lower()
+        if seqcheck[-5:] == "fasta":
+            with open(seq, "r") as f:
+                seq = ''
+                header = ''
+                for line in f.readlines():
+                    if '>' in line[:1]:
+                        tempheader = line.replace('\n', '')
+                        headers.append(tempheader)
+                        if seq:
+                            seqlist.append(seq)
+                            seq = ''
+                    else:
+                        seq = "{}{}".format(seq,line)
             seqlist.append(seq)
+        else:
+            print("Dit bestand is geen FASTA bestand.")
+            return False, False
     return headers, seqlist
 
 #nieuwe manier van sequenties filteren, nadeel van aangepaste openfile.
@@ -49,22 +54,15 @@ def is_dna(seqlist):
         return False
     
 #controleer waar het knipt.
-def knipt(seqlist, headers, knip='', naam1='No_name_entered'):
+def knipt(seqlist, headers):
     naam = []
     sequentiedeel = []
-    if knip == '':
-        with open('enzymen.txt') as f:
-            for line in f.readlines():
-                restrictie = line.replace('^', '').replace('\n','')
-                naam1, sequentiedeel1 = restrictie.split(' ')
-                print(naam1, sequentiedeel1)
-                naam.append(naam1)
-                sequentiedeel.append(sequentiedeel1)
-    else:
-        sequentiedeel.append(knip)
-        naam.append(naam1)
-#Fix ff dat die header maar 1x print. 
-#Jaja moeie ik, gefikst. 
+    with open('enzymen.txt') as f:
+        for line in f.readlines():
+            restrictie = line.replace('^', '').replace('\n','')
+            naam1, sequentiedeel1 = restrictie.split(' ')
+            naam.append(naam1)
+            sequentiedeel.append(sequentiedeel1)
     for y in range(0, len(seqlist)):
         for x in range(0, len(sequentiedeel)):
             locatie = seqlist[y].find(sequentiedeel[x])
@@ -78,25 +76,21 @@ def knipt(seqlist, headers, knip='', naam1='No_name_entered'):
                 headers[y] = ''
                 print('Match met',naam[x],'op locatie',locatie)
                 print(seqlist[y][locatie-15:locatie+30])
-                print(' '*14, sequentiedeel[x])
-        #else:
-            #print('Geen match gevonden.')
-
-        
-#Main functie. Wat debug dingen laten zitten zodat ik ooit nog kan checken
-#Hoe ik het heb gedaan.
+                print(' '*14, sequentiedeel[x])     
+#Main functie.
 def main():
-    headers, seqlist = lees_inhoud()
+    headers, seqlist,  = lees_inhoud()
+    if headers == False:
+        return
     seqlist = filterseq(seqlist)
-    #print(headers, seqlist)
     if is_dna(seqlist) == True:
         print('Dit is DNA/mRNA')
+        doorgaan = "ja"
     else:
-        print('Dit is geen DNA/mRNA, geen garantie dat het script nog werkt.')
-    print()
-    #resen = input('Welk enzym wil je op controleren? Geef de sequentie: ')
-    #seq = seqlist[0]
-    #print(seqlist)
-    knipt(seqlist, headers, "ATCG", "ATCG_TEST" )
+        print('Dit is (Waarschijnlijk) geen DNA/mRNA, geen garantie dat het script nog werkt.')
+        doorgaan = input("Wil je doorgaan? Ja/Nee: ")
+    if doorgaan.lower()[:1] == "j":
+        knipt(seqlist, headers)
+    print("Klaar.")
     
 main()
