@@ -1,14 +1,19 @@
 from tkinter.filedialog import askopenfilename
 
-#Lees_Inhoud. Aangepaste openfile.
+# Lees_Inhoud. Aangepaste openfile.
+# Errorhandling als er geen bestand is.
+# Checkt of het .fasta is.
 def lees_inhoud(amount=1):
     seqlist = []
     headers = []
     for x in range(0, amount):
         seq = askopenfilename()
         seqcheck = seq.lower()
-        if seqcheck[-5:] == "fasta":
+        try:
             with open(seq, "r") as f:
+                if seqcheck[-5:] != "fasta":
+                    print("Dit bestand is geen .FASTA bestand.")
+                    return False, False
                 seq = ''
                 header = ''
                 for line in f.readlines():
@@ -20,10 +25,10 @@ def lees_inhoud(amount=1):
                             seq = ''
                     else:
                         seq = "{}{}".format(seq,line)
-            seqlist.append(seq)
-        else:
-            print("Dit bestand is geen .FASTA bestand.")
+        except FileNotFoundError:
+            print("Geef een (geldig) bestand.")
             return False, False
+        seqlist.append(seq)
     return headers, seqlist
 
 #nieuwe manier van sequenties filteren, nadeel van aangepaste openfile.
@@ -37,7 +42,8 @@ def filterseq(seqs):
         
     return seqlist
 
-#Kijk of het wel dna/mrna is.
+# Kijk of het wel dna/mrna is.
+# Return True of False.
 def is_dna(seqlist):
     true = 0
     for x in range(0, len(seqlist)):
@@ -77,7 +83,9 @@ def knipt(seqlist, headers):
                 print('Match met',naam[x],'op locatie',locatie)
                 print(seqlist[y][locatie-15:locatie+30])
                 print(' '*14, sequentiedeel[x])     
-#Main functie.
+# Main functie.
+# Handling van de True/False output van is_dna.
+# Vraagt input als het niet zeker DNA is.
 def main():
     headers, seqlist,  = lees_inhoud()
     if headers == False:
