@@ -1,7 +1,6 @@
 from tkinter.filedialog import askopenfilename
 '''
 Errorhandling todo:
-    Eerste regel geen header
 '''
 
 
@@ -21,23 +20,29 @@ def openfile(amount=1):
     for x in range(0, amount):
         filename = askopenfilename()
         try:
-            if filename == '' or (filename.lower())[-5:] != "fasta":
+            if (filename.lower())[-5:] == "fasta":
+                with open(filename) as file:
+                    for line in file.readlines():
+                        if '>' in line[:1]:
+                            tempheader = line.strip('\n')
+                            headers.append(tempheader)
+                            if seq:
+                                seq = seq.strip()
+                                seqlist.append(seq)
+                                seq = ''
+                        else:
+                            line = line.strip()
+                            seq = "{}{}".format(seq,line)
+                seqlist.append(seq)
+            elif filename == '':
                 raise FileNotFoundError
-            with open(filename) as file:
-                for line in file.readlines():
-                    if '>' in line[:1]:
-                        tempheader = line.strip('\n')
-                        headers.append(tempheader)
-                        if seq:
-                            seq = seq.strip()
-                            seqlist.append(seq)
-                            seq = ''
-                    else:
-                        line = line.strip()
-                        seq = "{}{}".format(seq,line)
-            seqlist.append(seq)
+            else:
+                raise UserWarning
         except FileNotFoundError:
-            print("Er is geen bestand gevonden of het bestand is geen .FA of .FASTA bestand.\nProbeer het opnieuw.")
+            print("Er is geen bestand gevonden probeer het opnieuw.")
+            return False, False
+        except UserWarning:
+            print("Het geladen bestand is geen .FASTA. Probeer het opnieuw.")
             return False, False
     return headers, seqlist
 
